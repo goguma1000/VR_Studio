@@ -12,7 +12,8 @@ public class SessionListPanel : MonoBehaviour
 
     private NetworkManager manager;
     float x = 0;
-    float y = 0;
+    float y = -2;
+    float space = 0;
     public async void Show()
     {
         gameObject.SetActive(true);
@@ -36,6 +37,7 @@ public class SessionListPanel : MonoBehaviour
         {
             AddRow(session);
         }
+        ResizeContent();
     }
 
     private void AddRow( SessionInfo session)
@@ -59,14 +61,26 @@ public class SessionListPanel : MonoBehaviour
            SessionListItem[] items = itemParent.GetComponentsInChildren<SessionListItem>();
             foreach(SessionListItem item in items)
             {
+                item.transform.SetParent(null);
                 Destroy(item.gameObject);
             }
         }
         x = 0;
-        y = 0;
+        y = -2;
     }
+
+    private void ResizeContent()
+    {
+        RectTransform rt = itemParent.GetComponent<RectTransform>();
+        int count = itemParent.transform.childCount;
+        float height = ((sessionListPrefab.GetComponent<RectTransform>().sizeDelta.y * count) + (space * (count - 1)));
+        Debug.Log($"Count: {count} Space: {space} height:{height}");
+        rt.sizeDelta = new Vector2(rt.sizeDelta.x, height);
+    }
+
     public void Start()
     {
+        space = -1 * y;
         Show();
     }
 }

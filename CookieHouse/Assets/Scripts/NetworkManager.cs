@@ -149,6 +149,24 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         get { return session; }
         set { session = value; session.transform.SetParent(runner.transform); }
     }
+
+    public Player GetPlayer()
+    {
+        return runner?.GetPlayerObject(runner.LocalPlayer)?.GetComponent<Player>();
+    }
+
+    public void ForEachPlayer(Action<Player> action)
+    {
+        foreach(PlayerRef plyRef in runner.ActivePlayers)
+        {
+            NetworkObject plyObj = runner.GetPlayerObject(plyRef);
+            if (plyObj)
+            {
+                Player ply = plyObj.GetComponent<Player>();
+                action(ply);
+            }
+        }
+    }
     #region Fusion Interface
     public void OnConnectedToServer(NetworkRunner runner) { }
 
