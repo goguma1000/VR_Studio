@@ -185,6 +185,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) {
         Debug.Log($"player {player} Joined!");
+        //LobbyManager lm = FindObjectOfType<LobbyManager>();
+        //lm.updateList();
         if(session == null && IsSessionOwner)
         {
             Debug.Log("Spawning World");
@@ -195,6 +197,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.Log("Spawning player");
             runner.Spawn(playerPrefab, Vector3.zero, Quaternion.identity, player, (runner, obj) => runner.SetPlayerObject(player, obj));
+
         }
 
         SetConnectionStatus(ConnectionStatus.Started);
