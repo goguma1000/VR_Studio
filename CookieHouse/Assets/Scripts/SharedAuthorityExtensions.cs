@@ -14,7 +14,6 @@ public static class SharedAuthorityExtensions
         {
             await Task.Delay(1);
         }
-        Debug.Log(o.StateAuthority);
         return o.HasStateAuthority;
     }
 }

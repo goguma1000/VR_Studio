@@ -6,6 +6,7 @@ using Fusion.Sockets;
 using System;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public enum ConnectionStatus
 {
@@ -77,7 +78,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         StartGameResult result = await runner.StartGame(new StartGameArgs
         {
             GameMode = mode,
-            CustomLobbyName = "CookieHouse",
+            CustomLobbyName = lobbyid,
             SceneManager = loader,
             SessionName = props.RoomName,
             PlayerCount = props.PlayerLimit,
@@ -146,7 +147,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public Session Session
     {
-        get { return session; }
+        get => session;
         set { session = value; session.transform.SetParent(runner.transform); }
     }
 
@@ -155,18 +156,26 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         return runner?.GetPlayerObject(runner.LocalPlayer)?.GetComponent<Player>();
     }
 
-    public void ForEachPlayer(Action<Player> action)
+    public bool ForEachPlayer(int playerCount,Action<Player> action)
     {
-        foreach(PlayerRef plyRef in runner.ActivePlayers)
+        Player[] temp = runner.gameObject.GetComponentsInChildren<Player>();
+        if (temp.Length != playerCount) return false;
+        else
         {
-            NetworkObject plyObj = runner.GetPlayerObject(plyRef);
-            if (plyObj)
+            foreach (PlayerRef plyRef in runner.ActivePlayers)
             {
-                Player ply = plyObj.GetComponent<Player>();
-                action(ply);
+                NetworkObject plyObj = runner.GetPlayerObject(plyRef);
+                if (plyObj)
+                {
+                    Player ply = plyObj.GetComponent<Player>();
+                    if (ply.playerName == "") return false;
+                    action(ply);
+                }
             }
+            return true;
         }
     }
+
     #region Fusion Interface
     public void OnConnectedToServer(NetworkRunner runner) { }
 
@@ -185,8 +194,6 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) {
         Debug.Log($"player {player} Joined!");
-        //LobbyManager lm = FindObjectOfType<LobbyManager>();
-        //lm.updateList();
         if(session == null && IsSessionOwner)
         {
             Debug.Log("Spawning World");
@@ -203,7 +210,29 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         SetConnectionStatus(ConnectionStatus.Started);
     }
 
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+    public async void OnPlayerLeft(NetworkRunner runner, PlayerRef player) 
+    {
+        Debug.Log($"{player.PlayerId} disconnected");
+        if (runner.Topology == SimulationConfig.Topologies.Shared && player != runner.LocalPlayer)
+        {
+            NetworkObject playerObj = runner.GetPlayerObject(player);
+            if (playerObj)
+            {
+                await playerObj.WaitForStateAuthority();
+                if (playerObj != null && playerObj.HasStateAuthority)
+                {
+                    Debug.Log("Despawning Player");
+                    playerObj.GetComponent<Player>().Despawn();
+                    //NetworkObject obj = runner.GetPlayerObject(runner.LocalPlayer);
+                    
+                }
+                else { Debug.Log($"plyObj{playerObj}, auth: {playerObj.HasStateAuthority}"); }
+            }
+            else Debug.Log("playerObj null");
+
+        }
+        else Debug.Log("IsServer false");
+    }
 
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ArraySegment<byte> data) { }
 

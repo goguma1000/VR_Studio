@@ -47,9 +47,10 @@ public class SessionListPanel : MonoBehaviour
         {
             manager.JoinSession(sellectedSession);
         });
-
+       
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.anchoredPosition = new Vector2(0, y);
+       
 
         y -= 40;
     }

@@ -4,78 +4,78 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion;
+using Fusion.Sockets;
+using System;
+using System.Linq;
 
-public class LobbyManager : NetworkBehaviour{
+public class LobbyManager : NetworkBehaviour
+{
 
     [SerializeField] private GameObject PlayerListItemPrefab;
     [SerializeField] private Transform itemParent;
-    [SerializeField] private GameObject[] btn;
-    
-    private float y = -2;
+    [SerializeField] private Button startButton;
+    [SerializeField] private TextMeshProUGUI startText;
+    private float y = -32;
+    private int prePlayerCount = 0;
     private Player player;
-
+    private int ready = 0;
     private NetworkManager manager;
 
-    public bool isTakingAuthority = false;
-
-
-    private void Start()
+    private void Awake()
     {
         manager = NetworkManager.FindInstance();
-        
-        player = manager.GetPlayer();
+        manager.GetPlayer()?.RPC_SetIsReady(false);
     }
+ 
     void Update()
     {
         player = manager.GetPlayer();
-        //Recycle();
-       /*manager.ForEachPlayer(ply =>
+        int count = Runner.ActivePlayers.Count();
+        if (prePlayerCount != count && player.playerName != "")
         {
-            AddRow(ply);
-        });*/
+            UpdateList(count);
+            Debug.Log(count);
+        }
+        if(prePlayerCount == count)
+        {
+            CheckReady(count);
+        }
     }
 
-    /*public async void OnClickButton(int btnNum)
+    public void UpdateList(int nowPlayerCount)
     {
-        NetworkButton Nbtn = btn[btnNum - 1].GetComponent<NetworkButton>();
-        
-        isTakingAuthority = true;
-         bool auth = await Object.WaitForStateAuthority();
-        isTakingAuthority = false;
-        Debug.Log(auth);
-        if (auth)
-        {
-            if (Nbtn.Owner == 0 && player.selectedCharacterNum == 0)
-            {
-                Nbtn.playerName = player.playerName;
-                Nbtn.Owner = player.GetInstanceID();
-                player.RPC_SetCharacterSelected(btnNum);
-            }
-            else if (Nbtn.Owner == player.GetInstanceID())
-            {
-                Nbtn.playerName = "blank";
-                Nbtn.Owner = 0;
-                player.RPC_SetCharacterSelected(0);
-            }
-        }
-    }*/
+        Recycle();
+        if (manager.ForEachPlayer(nowPlayerCount, ply =>
+          {
+              AddRow(ply);
+          })) prePlayerCount = nowPlayerCount;
+    }
 
-    public void updateList()
+    private void CheckReady(int nowPlayerCount)
     {
-        manager.ForEachPlayer(ply =>
+        ready = 0;
+        manager.ForEachPlayer(nowPlayerCount, ply =>
         {
-            AddRow(ply);
+            if (ply.Ready) ready++;
         });
+
+        string wait = null;
+        if (ready < nowPlayerCount)
+            wait = $"Waiting for {nowPlayerCount - ready} of {nowPlayerCount} players";
+        else if (!manager.IsSessionOwner)
+            wait = "Waiting for session owner to start";
+        startButton.enabled = wait == null;
+        startText.text = wait ?? "Start";
     }
     private void AddRow(Player ply)
     {
-
-        GameObject go = Instantiate(PlayerListItemPrefab, Vector3.zero, Quaternion.identity,itemParent);
+        
+        GameObject go = Instantiate(PlayerListItemPrefab, Vector3.zero, Quaternion.identity, itemParent);
         PlayerListItem item = go.GetComponent<PlayerListItem>();
         item.SetUp(ply);
 
         RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchoredPosition = new Vector2(0,y);
+        rt.anchoredPosition = new Vector2(0, y);
         y -= rt.rect.height;
     }
 
@@ -90,6 +90,20 @@ public class LobbyManager : NetworkBehaviour{
                 Destroy(temp.gameObject);
             }
         }
-        y = -2;
+        y = -32;
+    }
+
+    public void OnClickReady()
+    {
+        Player player = manager.GetPlayer();
+        if (player.Ready) player.RPC_SetIsReady(false);
+        else player.RPC_SetIsReady(true);
+    }
+
+    public void OnStartGame()
+    {
+        manager = NetworkManager.FindInstance();
+        SessionProps props = manager.Session.Props;
+        manager.Session.LoadMap(MapIndex.GameMap);
     }
 }
