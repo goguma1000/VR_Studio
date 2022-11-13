@@ -31,7 +31,6 @@ public class NetworkButton : NetworkBehaviour
     public async void OnClickButton(int btnNum)
     {
         NetworkManager manager = NetworkManager.FindInstance();
-        // NetworkButton Nbtn = btn[btnNum - 1].GetComponent<NetworkButton>();
         Player player = manager.GetPlayer();
 
         isTakingAuthority = true;
@@ -44,12 +43,14 @@ public class NetworkButton : NetworkBehaviour
                 playerName = player.playerName;
                 Owner = player.GetInstanceID();
                 player.RPC_SetCharacterSelected(btnNum);
+                player.RPC_SetIsReady(true);
             }
             else if (Owner == player.GetInstanceID())
             {
                 playerName = "blank";
                 Owner = 0;
                 player.RPC_SetCharacterSelected(0);
+                player.RPC_SetIsReady(false);
             }
         }
     }

@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Fusion;
+using TMPro;
 public class SessionListPanel : MonoBehaviour
 {
     [SerializeField] private GameObject itemParent;
     [SerializeField] private GameObject sessionListPrefab;
     [SerializeField] private NewSessionTab newSessionTab;
-    [SerializeField] private Text _error;
+    [SerializeField] private TextMeshProUGUI _error;
 
     private NetworkManager manager;
-    float x = 0;
-    float y = -2;
-    float space = 0;
+    [SerializeField] private float space = 0;
+    private float y = 0;
+
     public async void Show()
     {
         gameObject.SetActive(true);
@@ -49,10 +50,12 @@ public class SessionListPanel : MonoBehaviour
         });
        
         RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchoredPosition = new Vector2(0, y);
+        rt.localPosition = Vector3.zero;
+        rt.anchoredPosition = new Vector2(-space, y);
+        
        
 
-        y -= 40;
+        y -= rt.sizeDelta.y;
     }
 
     private void Recycle()
@@ -66,8 +69,7 @@ public class SessionListPanel : MonoBehaviour
                 Destroy(item.gameObject);
             }
         }
-        x = 0;
-        y = -2;
+        y = -space;
     }
 
     private void ResizeContent()
@@ -81,7 +83,7 @@ public class SessionListPanel : MonoBehaviour
 
     public void Start()
     {
-        space = -1 * y;
         Show();
     }
+
 }

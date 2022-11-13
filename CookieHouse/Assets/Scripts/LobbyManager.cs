@@ -30,18 +30,26 @@ public class LobbyManager : NetworkBehaviour
     void Update()
     {
         player = manager.GetPlayer();
-        int count = Runner.ActivePlayers.Count();
-        if (prePlayerCount != count && player.playerName != "")
+        if (manager.ConnectionStatus == ConnectionStatus.Started)
         {
-            UpdateList(count);
-            Debug.Log(count);
-        }
-        if(prePlayerCount == count)
-        {
-            CheckReady(count);
+            int count = Runner.ActivePlayers.Count();
+            if (prePlayerCount != count && player != null&& player.playerName != "")
+            {
+                UpdateList(count);
+                Debug.Log(count);
+            }
+            if (prePlayerCount == count)
+            {
+                CheckReady(count);
+            }
         }
     }
 
+    public void DisconnectRoom()
+    {
+        manager = NetworkManager.FindInstance();
+        manager.Disconnect();
+    }
     public void UpdateList(int nowPlayerCount)
     {
         Recycle();
@@ -75,6 +83,7 @@ public class LobbyManager : NetworkBehaviour
         item.SetUp(ply);
 
         RectTransform rt = go.GetComponent<RectTransform>();
+        rt.localPosition = Vector3.zero;
         rt.anchoredPosition = new Vector2(0, y);
         y -= rt.rect.height;
     }

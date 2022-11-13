@@ -6,10 +6,10 @@ using TMPro;
 
 public class PlayerListItem : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI name;
+    [SerializeField] private TextMeshProUGUI playerName;
     
     public void SetUp(Player ply)
     {
-        name.text = ply.playerName;
+        playerName.text = ply.playerName;
     }
 }

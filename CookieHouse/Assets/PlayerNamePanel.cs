@@ -7,13 +7,27 @@ public class PlayerNamePanel : MonoBehaviour
 {
     [SerializeField] private TMP_InputField inputBox;
     NetworkManager manager;
-    private void OnEnable()
+    private void Awake()
     {
         manager = NetworkManager.FindInstance();
     }
-    public void OnChangedName( )
+    private void Update()
     {
         Player ply = manager.GetPlayer();
-        ply.RPC_SetPlayerName(inputBox.text);
+        if (inputBox.text == "" && (ply != null)) setDefaultName();
+    }
+
+    private void setDefaultName()
+    {
+        manager = NetworkManager.FindInstance();
+        inputBox.text = "Player" + manager.GetPlayer().gameObject.GetInstanceID();
+    }
+    public void OnChangedName( )
+    {
+        if (inputBox.text != "")
+        {
+            Player ply = manager.GetPlayer();
+            ply.RPC_SetPlayerName(inputBox.text);
+        }
     }
 }

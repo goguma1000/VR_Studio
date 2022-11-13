@@ -10,7 +10,11 @@ public class SceneLoader : MonoBehaviour
     private string LoadScene;
 
     public void loadScene(string scene) {
-
+        if(NetworkManager.FindInstance() != null)
+        {
+            NetworkManager manager = NetworkManager.FindInstance();
+            manager.Disconnect();
+        }
         SceneManager.LoadScene(scene);
     }
 

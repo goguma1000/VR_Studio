@@ -6,7 +6,7 @@ using Fusion;
 using System;
 public class SessionListItem : GridCell
 {
-    [SerializeField] private TMP_Text name;
+    [SerializeField] private TMP_Text sessionNname;
     [SerializeField] private TMP_Text map;
     [SerializeField] private TMP_Text players;
 
@@ -16,7 +16,7 @@ public class SessionListItem : GridCell
     public void Setup(SessionInfo info, Action<SessionInfo> onjoin)
     {
         _info = info;
-        name.text = $"{info.Name} ({info.Region})";
+        sessionNname.text = $"{info.Name} ({info.Region})";
         map.text = "CookieHouse";
         players.text = $"{info.PlayerCount}/({info.MaxPlayers})";
         _onJoin = onjoin;
@@ -24,6 +24,8 @@ public class SessionListItem : GridCell
 
     public void OnJoin()
     {
-        _onJoin(_info);
+        if (_info.PlayerCount != _info.MaxPlayers)
+            _onJoin(_info);
+        else Debug.Log("The Room is Full");
     }
 }

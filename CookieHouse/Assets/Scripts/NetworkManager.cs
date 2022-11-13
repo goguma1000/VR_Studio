@@ -176,6 +176,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+
     #region Fusion Interface
     public void OnConnectedToServer(NetworkRunner runner) { }
 
@@ -223,7 +224,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
                 {
                     Debug.Log("Despawning Player");
                     playerObj.GetComponent<Player>().Despawn();
-                    //NetworkObject obj = runner.GetPlayerObject(runner.LocalPlayer);
+                    
                     
                 }
                 else { Debug.Log($"plyObj{playerObj}, auth: {playerObj.HasStateAuthority}"); }
@@ -254,7 +255,17 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         session = null;
 
         if (Application.isPlaying)
-            SceneManager.LoadSceneAsync((int)MapIndex.RoomList);
+        {
+            if(SceneManager.GetActiveScene().buildIndex == (int)MapIndex.RoomList)
+            {
+                SceneManager.LoadSceneAsync((int)MapIndex.Intro);
+            }
+            else
+            {
+                SceneManager.LoadSceneAsync((int)MapIndex.RoomList);
+            }
+        }
+            
     }
 
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)   { }
