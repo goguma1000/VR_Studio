@@ -58,6 +58,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public NetworkRunner GetMangerRunner() { return runner; }
     public static NetworkManager FindInstance()
     {
         return FindObjectOfType<NetworkManager>();

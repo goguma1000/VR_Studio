@@ -684,7 +684,7 @@ MonoBehaviour:
   m_Camera: {fileID: 1376875916}
   m_OriginBaseGameObject: {fileID: 175815839}
   m_CameraFloorOffsetObject: {fileID: 1913790401}
-  m_RequestedTrackingOriginMode: 0
+  m_RequestedTrackingOriginMode: 2
   m_CameraYOffset: 1.1176
 --- !u!4 &175815841
 Transform:
@@ -4229,7 +4229,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 1}
   m_SizeDelta: {x: 1, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1276183393
