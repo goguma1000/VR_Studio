@@ -10,7 +10,7 @@ public class SessionProps : MonoBehaviour
 {
     public string RoomName = "AutoHouse";
     public int PlayerLimit = 2;
-    private bool AllowLateJoin = false;
+    public bool AllowLateJoin = false;
 
     public SessionProps()
     {

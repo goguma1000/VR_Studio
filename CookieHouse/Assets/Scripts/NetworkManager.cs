@@ -6,6 +6,7 @@ using Fusion.Sockets;
 using System;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public enum ConnectionStatus
 {
@@ -57,6 +58,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public NetworkRunner GetMangerRunner() { return runner; }
     public static NetworkManager FindInstance()
     {
         return FindObjectOfType<NetworkManager>();
@@ -77,7 +79,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         StartGameResult result = await runner.StartGame(new StartGameArgs
         {
             GameMode = mode,
-            CustomLobbyName = "CookieHouse",
+            CustomLobbyName = lobbyid,
             SceneManager = loader,
             SessionName = props.RoomName,
             PlayerCount = props.PlayerLimit,
@@ -146,9 +148,36 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public Session Session
     {
-        get { return session; }
+        get => session;
         set { session = value; session.transform.SetParent(runner.transform); }
     }
+
+    public Player GetPlayer()
+    {
+        return runner?.GetPlayerObject(runner.LocalPlayer)?.GetComponent<Player>();
+    }
+
+    public bool ForEachPlayer(int playerCount,Action<Player> action)
+    {
+        Player[] temp = runner.gameObject.GetComponentsInChildren<Player>();
+        if (temp.Length != playerCount) return false;
+        else
+        {
+            foreach (PlayerRef plyRef in runner.ActivePlayers)
+            {
+                NetworkObject plyObj = runner.GetPlayerObject(plyRef);
+                if (plyObj)
+                {
+                    Player ply = plyObj.GetComponent<Player>();
+                    if (ply.playerName == "") return false;
+                    action(ply);
+                }
+            }
+            return true;
+        }
+    }
+
+
     #region Fusion Interface
     public void OnConnectedToServer(NetworkRunner runner) { }
 
@@ -177,12 +206,35 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.Log("Spawning player");
             runner.Spawn(playerPrefab, Vector3.zero, Quaternion.identity, player, (runner, obj) => runner.SetPlayerObject(player, obj));
+
         }
 
         SetConnectionStatus(ConnectionStatus.Started);
     }
 
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+    public async void OnPlayerLeft(NetworkRunner runner, PlayerRef player) 
+    {
+        Debug.Log($"{player.PlayerId} disconnected");
+        if (runner.Topology == SimulationConfig.Topologies.Shared && player != runner.LocalPlayer)
+        {
+            NetworkObject playerObj = runner.GetPlayerObject(player);
+            if (playerObj)
+            {
+                await playerObj.WaitForStateAuthority();
+                if (playerObj != null && playerObj.HasStateAuthority)
+                {
+                    Debug.Log("Despawning Player");
+                    playerObj.GetComponent<Player>().Despawn();
+                    
+                    
+                }
+                else { Debug.Log($"plyObj{playerObj}, auth: {playerObj.HasStateAuthority}"); }
+            }
+            else Debug.Log("playerObj null");
+
+        }
+        else Debug.Log("IsServer false");
+    }
 
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ArraySegment<byte> data) { }
 
@@ -204,7 +256,17 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         session = null;
 
         if (Application.isPlaying)
-            SceneManager.LoadSceneAsync((int)MapIndex.RoomList);
+        {
+            if(SceneManager.GetActiveScene().buildIndex == (int)MapIndex.RoomList)
+            {
+                SceneManager.LoadSceneAsync((int)MapIndex.Intro);
+            }
+            else
+            {
+                SceneManager.LoadSceneAsync((int)MapIndex.RoomList);
+            }
+        }
+            
     }
 
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)   { }
